@@ -389,6 +389,7 @@ export function DiffSectionBody({
                 actions={plannedRow.note.actions}
                 active={plannedRow.note.active}
                 actionKeyLabels={plannedRow.note.actionKeyLabels}
+                commandActions={plannedRow.note.commandActions}
                 onActivate={plannedRow.note.onActivate}
                 thread={plannedRow.note.thread}
                 file={file}

@@ -355,8 +355,10 @@ and retires the replaced instance at that explicit ownership boundary.
 
 ### `hunk.apiVersion`
 
-The API generation this Hunk speaks (currently `32`). Branch on it if you want
-one file to support several Hunk versions. Version 32 adds `ctx.selection.layout`, the resolved
+The API generation this Hunk speaks (currently `33`). Branch on it if you want
+one file to support several Hunk versions. Version 33 adds command `checked` toggles in the
+Extensions menu, command `noteAction` labels on the active note's action row, and
+`ctx.selection.activeNoteId`; version 32 adds `ctx.selection.layout`, the resolved
 split or unified layout; version 31 adds optional read-only workspace status,
 sibling inspection and status review planning; version 30 adds the opaque current review generation
 in pane props; version 29 adds generation-scoped extension review presentation scopes; version 28
@@ -1944,6 +1946,40 @@ extension in load order, and running one from the menu is the same dispatch the
 key would have done — so a command with no `key`, or one whose chord was
 refused, is still reachable with the mouse.
 
+A toggle passes `checked`, a function returning its current state. The
+Extensions menu draws the entry as a checkbox and calls `checked` each time it
+builds the menus, so read state the extension already holds:
+
+```ts
+let compact = false;
+hunk.registerCommand(
+  { id: "compact", title: "Compact summaries", checked: () => compact },
+  (ctx) => {
+    compact = !compact;
+    ctx.notify(compact ? "Compact summaries on" : "Compact summaries off");
+  },
+);
+```
+
+A `checked` that throws or returns a non-boolean draws the entry without a
+checkbox.
+
+`noteAction` offers a command on the active saved note's action row, after
+reply, edit and delete, drawn as the command's first key and the label. Clicking
+it runs the command. The handler finds the note through
+`ctx.selection.activeNoteId`:
+
+```ts
+hunk.registerCommand(
+  { id: "quote", title: "Quote the active note", key: "Q", noteAction: "quote" },
+  (ctx) => {
+    const id = ctx.selection.activeNoteId;
+    const note = ctx.review.snapshot()?.notes.find((candidate) => candidate.id === id);
+    if (note) ctx.notify(`> ${note.summary}`);
+  },
+);
+```
+
 The handler fires when the key is pressed outside modal UI — dialogs, menus,
 and focused text inputs own their keys first. It receives the standard context
 plus `ctx.panes`, the controls for opening panes:
@@ -2007,7 +2043,9 @@ views a pane's `files` prop carries — so a command that works across the whole
 review (a content search, a bulk action) reads its corpus here instead of
 shadow-tracking `changeset_loaded`; `selection.file` is one of its entries or
 `null`. `selection.layout` is the resolved `"split"` or `"unified"` layout the review is
-rendering, so a command can order things as the user sees them. The values are captured when the
+rendering, so a command can order things as the user sees them. `selection.activeNoteId` is the
+id of the saved note that reply, edit and delete currently address — the same id
+`ctx.review.snapshot()` reports — or `null` when no note is active. The values are captured when the
 command fires: a handler that awaits still sees the selection it was run from, not wherever the
 user navigated to meanwhile.
 

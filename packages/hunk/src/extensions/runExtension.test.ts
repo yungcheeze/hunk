@@ -13,8 +13,8 @@ function bundledMetadata(id: string) {
 }
 
 describe("runExtensionFactory", () => {
-  test("advertises the selection layout through extension API v32", () => {
-    expect(HUNK_EXTENSION_API_VERSION).toBe(32);
+  test("advertises note actions and the active note through extension API v33", () => {
+    expect(HUNK_EXTENSION_API_VERSION).toBe(33);
   });
 
   test("applies a synchronous factory before returning, with nothing to await", () => {
@@ -791,6 +791,31 @@ describe("registerCommand", () => {
 
     expect(registry.commands).toEqual([]);
     expect(issues[0]?.message).toContain("handler function");
+  });
+
+  test("refuses a non-function checked and an empty noteAction", () => {
+    const registry = createEmptyExtensionRegistry();
+    const issues: ExtensionLoadIssue[] = [];
+
+    for (const command of [
+      { id: "toggle", title: "Toggle", checked: true as never },
+      { id: "copy", title: "Copy", noteAction: "" },
+    ]) {
+      runExtensionFactory({
+        metadata: bundledMetadata(`bad-${command.id}`),
+        registry,
+        issues,
+        factory: (hunk) => {
+          hunk.registerCommand(command, () => {});
+        },
+      });
+    }
+
+    expect(registry.commands).toEqual([]);
+    expect(issues.map((issue) => issue.message)).toEqual([
+      expect.stringContaining("checked must be a function"),
+      expect.stringContaining("noteAction must be a non-empty label"),
+    ]);
   });
 });
 

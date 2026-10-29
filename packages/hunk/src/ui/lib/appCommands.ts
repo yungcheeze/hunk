@@ -77,6 +77,10 @@ export interface AppCommand {
   verticalDirection?: VerticalCommandDirection;
   /** Close an open dropdown menu after running. */
   closesMenu?: boolean;
+  /** Current checkbox state for a toggle the menus list; `undefined` draws no checkbox. */
+  checked?: () => boolean | undefined;
+  /** Label offered on the active saved note's action row, beside reply, edit and delete. */
+  noteActionLabel?: string;
 }
 
 /**

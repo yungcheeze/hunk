@@ -71,6 +71,7 @@ export function buildExtensionAppCommands(
 
   for (const registered of options.registered) {
     const { command } = registered;
+    const { checked } = command;
     const fullId = `${registered.extensionId}.${command.id}`;
     const declared = options.resolvedKeys?.get(fullId) ?? toKeyChordList(command.key);
     const bound: Array<{ chord: string; match: (key: KeyEvent) => boolean }> = [];
@@ -110,10 +111,27 @@ export function buildExtensionAppCommands(
       match: (key) => bound.some((binding) => binding.match(key)),
       run: () => options.runCommand(registered),
       closesMenu: true,
+      ...(checked ? { checked: () => readExtensionChecked(checked) } : {}),
+      ...(command.noteAction ? { noteActionLabel: command.noteAction } : {}),
     });
   }
 
   return { commands, conflicts };
+}
+
+/**
+ * Read an extension toggle's state for one menu build.
+ *
+ * Menus are built during render, so a throwing or non-boolean answer draws the
+ * entry without a checkbox instead of taking the menu bar down with it.
+ */
+function readExtensionChecked(checked: () => boolean): boolean | undefined {
+  try {
+    const value = checked();
+    return typeof value === "boolean" ? value : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

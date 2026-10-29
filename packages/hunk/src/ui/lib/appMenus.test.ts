@@ -374,4 +374,46 @@ describe("the Extensions menu", () => {
     }
     expect(ran).toEqual(["notes", "blame"]);
   });
+
+  test("a toggle shows the checkbox state its extension reports when the menus are built", () => {
+    let compact = false;
+    const toggle: RegisteredCommand = {
+      extensionId: "notes",
+      command: { id: "compact", title: "Compact summaries", checked: () => compact },
+      handler: () => {},
+    };
+    const plain = registeredCommand("notes", "sync", "Sync notes");
+
+    expect(
+      entry(menusWithExtensions([toggle, plain]), "extensions", "Compact summaries").checked,
+    ).toBe(false);
+    compact = true;
+    const menus = menusWithExtensions([toggle, plain]);
+    expect(entry(menus, "extensions", "Compact summaries").checked).toBe(true);
+    expect(entry(menus, "extensions", "Sync notes").checked).toBeUndefined();
+  });
+
+  test("a toggle that throws or answers a non-boolean draws no checkbox", () => {
+    const menus = menusWithExtensions([
+      {
+        extensionId: "notes",
+        command: {
+          id: "broken",
+          title: "Broken toggle",
+          checked: () => {
+            throw new Error("state not loaded");
+          },
+        },
+        handler: () => {},
+      },
+      {
+        extensionId: "notes",
+        command: { id: "vague", title: "Vague toggle", checked: () => "yes" as never },
+        handler: () => {},
+      },
+    ]);
+
+    expect(entry(menus, "extensions", "Broken toggle").checked).toBeUndefined();
+    expect(entry(menus, "extensions", "Vague toggle").checked).toBeUndefined();
+  });
 });

@@ -38,6 +38,7 @@ import {
 import {
   createVisibleAgentNote,
   reviewNoteSource,
+  type NoteCommandAction,
   type VisibleAgentNote,
 } from "../../lib/agentAnnotations";
 import {
@@ -307,6 +308,7 @@ export function DiffPane({
   selectedHunkIndex,
   activeNoteId,
   noteActionKeyLabels,
+  noteCommandActions,
   cursorLine = "off",
   lineCursor = null,
   lineCursorRevealRequest = { id: 0, placement: "nearest" },
@@ -392,6 +394,8 @@ export function DiffPane({
   selectedHunkIndex: number;
   activeNoteId?: string;
   noteActionKeyLabels?: { delete: string; edit: string; reply: string };
+  /** Extension commands offered on the active saved note's action row. */
+  noteCommandActions?: readonly NoteCommandAction[];
   cursorLine?: CursorLine;
   lineCursor?: LineCursor | null;
   lineCursorRevealRequest?: {
@@ -670,6 +674,9 @@ export function DiffPane({
                   ...(metadata.reviewNoteId === activeNoteId && noteActionKeyLabels
                     ? { actionKeyLabels: noteActionKeyLabels }
                     : {}),
+                  ...(metadata.reviewNoteId === activeNoteId && noteCommandActions?.length
+                    ? { commandActions: noteCommandActions }
+                    : {}),
                   ...(onActivateNote
                     ? { onActivate: () => onActivateNote(metadata.reviewNoteId) }
                     : {}),
@@ -817,6 +824,7 @@ export function DiffPane({
     draftSaveKeyLabel,
     onUpdateDraftNote,
     noteActionKeyLabels,
+    noteCommandActions,
     showAgentNotes,
   ]);
 

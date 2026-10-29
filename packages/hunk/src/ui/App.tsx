@@ -96,6 +96,7 @@ import {
   buildAppCommands,
   builtinCommandKeyDefaults,
   builtinCommandMatchProbes,
+  executeAppCommand,
   findAppCommandById,
   observeAppCommandDispatch,
 } from "./lib/appCommands";
@@ -424,12 +425,18 @@ export function App({
     () => (cursorLine === "off" ? null : review.getLineCursor()),
     [cursorLine, review.getLineCursor],
   );
+  // Read the store directly so a command sees a note made active by the key event before it.
+  const getActiveExtensionNoteId = useCallback(
+    () => selectActiveStoredReviewNote(review.store.getSnapshot())?.note.id ?? null,
+    [review.store],
+  );
   const resolvedLayoutRef = useRef<ExtensionCanonicalResolvedLayout>("unified");
   const getResolvedLayout = useCallback(() => resolvedLayoutRef.current, []);
   const extensionRuntime = useExtensionRuntimeBridge({
     extensions,
     files: filteredFiles,
     getActiveLineCursor: getActiveExtensionLineCursor,
+    getActiveNoteId: getActiveExtensionNoteId,
     getSelection: review.getSelection,
     getLayout: getResolvedLayout,
     reviewGeneration: bootstrap,
@@ -1458,6 +1465,26 @@ export function App({
     () => ({ delete: deleteNoteKeyLabel, edit: editNoteKeyLabel, reply: replyNoteKeyLabel }),
     [deleteNoteKeyLabel, editNoteKeyLabel, replyNoteKeyLabel],
   );
+  // Mouse clicks run the extension command the way the Extensions menu does; the
+  // handler reads the active note from its selection snapshot.
+  const noteCommandActions = useMemo(
+    () =>
+      extensionAppCommands.commands.flatMap((command) =>
+        command.noteActionLabel
+          ? [
+              {
+                id: command.id,
+                keyLabel: command.keyLabels[0] ?? "",
+                label: command.noteActionLabel,
+                run: () => {
+                  executeAppCommand(extensionAppCommands.commands, command.id);
+                },
+              },
+            ]
+          : [],
+      ),
+    [extensionAppCommands.commands],
+  );
   const draftSaveKeyLabel = findAppCommandById(appCommands, "hunk.review.saveNote")?.keyLabels[0];
   useExtensionRuntimeBindings({
     commands: appCommands,
@@ -1777,6 +1804,7 @@ export function App({
             selectedHunkIndex={selectedHunkIndex}
             activeNoteId={activeNoteId}
             noteActionKeyLabels={noteActionKeyLabels}
+            noteCommandActions={noteCommandActions}
             scrollToNote={review.scrollToNote}
             draftNote={review.draftNote}
             draftNoteFocused={focusArea === "note"}

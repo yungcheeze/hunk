@@ -21,7 +21,7 @@
  * Extensions can branch on `hunk.apiVersion` so a newer Hunk can keep loading
  * older extensions without guessing at their expectations.
  */
-export const HUNK_EXTENSION_API_VERSION = 32;
+export const HUNK_EXTENSION_API_VERSION = 33;
 export type HunkExtensionApiVersion = typeof HUNK_EXTENSION_API_VERSION;
 
 export type ExtensionNotifyType = "info" | "warning" | "error";
@@ -1759,6 +1759,23 @@ export interface ExtensionCommand {
    * unbind the command by its `<extensionId>.<id>` name.
    */
   key?: string | readonly string[];
+  /**
+   * Report the on/off state of a toggle command, which the Extensions menu
+   * draws as a checkbox beside its title.
+   *
+   * Hunk calls it synchronously whenever it builds the menus, so it should
+   * read state the extension already holds. A call that throws or returns a
+   * non-boolean draws the entry without a checkbox. Omit for a command that
+   * is not a toggle.
+   */
+  checked?: () => boolean;
+  /**
+   * Offer the command on the active saved note's action row, drawn as the
+   * command's first key and this label beside reply, edit and delete
+   * (`"copy"` shows `Y copy` for a command bound to `Y`). Clicking it runs
+   * the command. The handler finds the note in `ctx.selection.activeNoteId`.
+   */
+  noteAction?: string;
 }
 
 /** Options for invoking one public Hunk command from an extension command. */
@@ -1955,6 +1972,12 @@ export interface ExtensionReviewSelection {
    * the user sees them. Present even when `file` is `null`.
    */
   readonly layout: ExtensionCanonicalResolvedLayout;
+  /**
+   * The saved review note that keyboard note actions (reply, edit, delete)
+   * currently address, as its `ExtensionReviewNote.id` from
+   * `ctx.review.snapshot()`, or `null` when no note is active.
+   */
+  readonly activeNoteId: string | null;
 }
 
 /** One stable reviewed file in an authoritative extension snapshot. */

@@ -7,10 +7,11 @@ The extension factory receives one API object. Registration calls are only valid
 
 ## `hunk.apiVersion`
 
-The API generation this Hunk speaks (currently `32`). Branch on it if you want one file to support several Hunk versions, or declare `"hunk": {"apiVersion": N}` in a folder extension's `package.json` so an older Hunk refuses to load it with a clear message.
+The API generation this Hunk speaks (currently `33`). Branch on it if you want one file to support several Hunk versions, or declare `"hunk": {"apiVersion": N}` in a folder extension's `package.json` so an older Hunk refuses to load it with a clear message.
 
 | Version | Adds                                                                                                      |
 | ------- | --------------------------------------------------------------------------------------------------------- |
+| 33      | Extensions-menu `checked` toggles, note-row `noteAction` commands, and `ctx.selection.activeNoteId`       |
 | 32      | `ctx.selection.layout`, the resolved split or unified layout                                              |
 | 31      | Optional read-only VCS workspace status, sibling inspection, and status review planning                   |
 | 30      | The opaque current review generation (`reviewGeneration`) in pane props                                   |
@@ -282,6 +283,8 @@ Declared keys are defaults: users remap commands by id in their `[keybindings]` 
 
 Registered commands are also listed in the menu bar's **Extensions** menu under their `title`, showing whichever key they currently answer to — a command with no binding is still reachable with the mouse.
 
+A toggle passes `checked: () => boolean`, which the Extensions menu draws as a checkbox and re-reads every time it builds the menus; a `checked` that throws or returns a non-boolean draws no checkbox. `noteAction: "<label>"` offers the command on the active saved note's action row, after reply, edit and delete, as its first key and the label; clicking it runs the command.
+
 The handler fires when the key is pressed outside modal UI (dialogs, menus, and focused text inputs own their keys). It receives the standard context plus:
 
 - `ctx.commands.isEnabled(commandId)` / `execute(commandId, { count? })` — probes or invokes an explicitly public built-in `hunk.*` command through the same live table as keyboard and menu actions. Relative movement applies counts atomically; extension-owned and cross-extension commands return `false`.
@@ -311,7 +314,7 @@ hunk.registerCommand(
 );
 ```
 
-`selection.file` is a frozen view, identical to a pane's `files` entries; it is `null` when filtering hides the selected file or when no files are visible. `selection.hunkIndex` is `null` whenever `file` is, or when the file has no hunks. `selection.currentLine` is the one-based `{ side, line }` source address carrying the current-line marker, or `null` when that marker is off or the review has not settled on a rendered line. It belongs to this file and hunk, uses Hunk's canonical new-side address for context rows, and can be passed directly to `navigation.revealLine`. `selection.layout` is the resolved `"split"` or `"unified"` layout the review is rendering, so a command can order things as the user sees them. The values are captured when the command fires, so an async handler keeps the selection it started from.
+`selection.file` is a frozen view, identical to a pane's `files` entries; it is `null` when filtering hides the selected file or when no files are visible. `selection.hunkIndex` is `null` whenever `file` is, or when the file has no hunks. `selection.currentLine` is the one-based `{ side, line }` source address carrying the current-line marker, or `null` when that marker is off or the review has not settled on a rendered line. It belongs to this file and hunk, uses Hunk's canonical new-side address for context rows, and can be passed directly to `navigation.revealLine`. `selection.layout` is the resolved `"split"` or `"unified"` layout the review is rendering, so a command can order things as the user sees them. `selection.activeNoteId` is the id of the saved note that reply, edit and delete address — the id `ctx.review.snapshot()` reports — or `null`. The values are captured when the command fires, so an async handler keeps the selection it started from.
 
 ### Authoritative review snapshots
 

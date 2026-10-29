@@ -40,6 +40,7 @@ const selection = Object.freeze({
   currentLine: null,
   files: [],
   layout: "unified",
+  activeNoteId: null,
 }) as ExtensionReviewSelection;
 
 /** Mount the command runner and expose its stable invocation callback. */

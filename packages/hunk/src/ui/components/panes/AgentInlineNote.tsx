@@ -187,6 +187,7 @@ export function AgentInlineNote({
   annotation,
   active = false,
   actionKeyLabels,
+  commandActions,
   anchorSide,
   file,
   layout,
@@ -205,6 +206,8 @@ export function AgentInlineNote({
   annotation: AgentAnnotation;
   active?: boolean;
   actionKeyLabels?: { delete: string; edit: string; reply: string };
+  /** Extension commands appended after delete while this card is active. */
+  commandActions?: VisibleAgentNote["commandActions"];
   anchorSide?: "old" | "new";
   file?: DiffFile;
   layout: Exclude<LayoutMode, "auto">;
@@ -437,6 +440,12 @@ export function AgentInlineNote({
               onMouseUp: actions.onDelete,
             }
           : null,
+        ...(commandActions ?? []).map((action) => ({
+          id: `command:${action.id}`,
+          keyLabel: action.keyLabel,
+          label: action.label,
+          onMouseUp: action.run,
+        })),
       ].filter((item): item is BorderActionItem => item !== null)
     : [];
 

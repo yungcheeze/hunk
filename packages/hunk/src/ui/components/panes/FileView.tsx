@@ -199,6 +199,7 @@ function FileViewComponent({
                 annotation={plannedRow.annotation}
                 active={plannedRow.note.active}
                 actionKeyLabels={plannedRow.note.actionKeyLabels}
+                commandActions={plannedRow.note.commandActions}
                 anchorSide={plannedRow.anchorSide}
                 file={file}
                 layout="unified"

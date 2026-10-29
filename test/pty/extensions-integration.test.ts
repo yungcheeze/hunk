@@ -162,6 +162,22 @@ export default function (hunk) {
 }
 `;
 
+/** A menu toggle and a note action that reads the active note from its selection. */
+const NOTE_ACTION_EXTENSION_SOURCE = `
+let pinned = false;
+
+export default function (hunk) {
+  hunk.registerCommand({ id: "pin", title: "Pin notes", checked: () => pinned }, () => {
+    pinned = !pinned;
+  });
+  hunk.registerCommand({ id: "quote", title: "Quote note", key: "Y", noteAction: "quote" }, (ctx) => {
+    const id = ctx.selection.activeNoteId;
+    const note = ctx.review.snapshot()?.notes.find((candidate) => candidate.id === id);
+    ctx.notify(note ? "QUOTED " + note.summary : "NO ACTIVE NOTE");
+  });
+}
+`;
+
 /** Toggle rendered guide visibility while retaining the files pane's responsive state. */
 const INDEPENDENT_GUIDE_EXTENSION_SOURCE = `import { createElement } from "react";
 export default function (hunk) {
@@ -689,6 +705,51 @@ describe("PTY extensions", () => {
         { timeout: 20_000 },
       );
       expect(opened).toContain("alpha.ts");
+    } finally {
+      session.close();
+    }
+  });
+
+  test("an extension toggle shows its checkbox and a note action quotes the active note", async () => {
+    const configHome = harness.createIsolatedConfigHome();
+    const fixture = harness.createRepoExtensionFixture(NOTE_ACTION_EXTENSION_SOURCE);
+    const session = await harness.launchHunk({
+      args: [
+        "diff",
+        "--mode",
+        "unified",
+        "--extension",
+        join(fixture.dir, ".hunk", "extensions", "fixture.ts"),
+      ],
+      cwd: fixture.dir,
+      cols: 120,
+      rows: 30,
+      env: { XDG_CONFIG_HOME: configHome },
+    });
+
+    try {
+      await harness.waitForSnapshot(
+        session,
+        (text) => text.includes("alpha.ts") && !text.includes("Run this repository's extensions?"),
+        20_000,
+      );
+
+      await session.click(/Extensions/);
+      await session.waitForText(/\[ \] Pin notes/, { timeout: 20_000 });
+      await session.click(/Pin notes/);
+      await session.click(/Extensions/);
+      await session.waitForText(/\[x\] Pin notes/, { timeout: 20_000 });
+      await session.press("escape");
+
+      await session.type("c");
+      await session.type("Quote me.");
+      await session.waitForText(/Quote me\./, { timeout: 5_000 });
+      await session.type("\x13");
+      const saved = await session.waitForText(/D delete Y quote/, { timeout: 5_000 });
+      expect(saved).toContain("● Your note");
+
+      await session.type("Y");
+      await session.waitForText(/QUOTED Quote me\./, { timeout: 5_000 });
     } finally {
       session.close();
     }

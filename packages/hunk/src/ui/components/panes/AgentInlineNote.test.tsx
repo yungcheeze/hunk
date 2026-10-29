@@ -86,6 +86,42 @@ test("AgentInlineNote persistently identifies the active note and resolved actio
   }
 });
 
+test("AgentInlineNote offers extension note actions after delete and runs them on click", async () => {
+  const ran: string[] = [];
+  const setup = await testRender(
+    <AgentInlineNote
+      annotation={{ source: "user", newRange: [2, 2], summary: "Copy target" }}
+      active={true}
+      actionKeyLabels={{ delete: "D", edit: "E", reply: "R" }}
+      actions={{ onDelete: () => {}, onEdit: () => {}, onReply: () => {} }}
+      commandActions={[
+        { id: "clip.copy", keyLabel: "Y", label: "copy", run: () => ran.push("copy") },
+      ]}
+      anchorSide="new"
+      layout="unified"
+      theme={theme}
+      width={60}
+    />,
+    { width: 61, height: 5 },
+  );
+
+  try {
+    await act(async () => {
+      await setup.renderOnce();
+    });
+    const lines = setup.captureCharFrame().split("\n");
+    const row = lines.findIndex((line) => line.includes("Y copy"));
+
+    expect(lines[row]).toContain("R reply E edit D delete Y copy");
+    await act(async () => {
+      await setup.mockMouse.click(lines[row]!.indexOf("Y copy") + 2, row);
+    });
+    expect(ran).toEqual(["copy"]);
+  } finally {
+    await act(async () => setup.renderer.destroy());
+  }
+});
+
 test("AgentInlineNote keeps hover actions pointer-only and activates when clicked", async () => {
   function HoverHarness() {
     const [active, setActive] = useState(false);

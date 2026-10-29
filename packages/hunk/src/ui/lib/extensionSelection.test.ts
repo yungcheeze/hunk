@@ -60,6 +60,7 @@ describe("buildExtensionReviewSelection", () => {
       currentLine: null,
       files: selection.files,
       layout: "unified",
+      activeNoteId: null,
     });
     expect(selection.files).toHaveLength(2);
   });

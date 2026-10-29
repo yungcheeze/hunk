@@ -79,6 +79,8 @@ interface SelectionInputs {
   getLayout: () => ExtensionCanonicalResolvedLayout;
   getSelection: () => { fileId: string | null; hunkIndex: number | null };
   getActiveLineCursor: () => Pick<LineCursor, "fileId" | "hunkIndex" | "target"> | null;
+  /** Read the saved note keyboard note actions address, or `null`. */
+  getActiveNoteId: () => string | null;
 }
 
 const unavailableNavigation: ExtensionRuntimeNavigationBindings = {
@@ -92,6 +94,7 @@ export function useExtensionRuntimeBridge({
   extensions,
   files,
   getActiveLineCursor,
+  getActiveNoteId,
   getSelection,
   getLayout,
   reviewGeneration,
@@ -104,6 +107,7 @@ export function useExtensionRuntimeBridge({
   extensions?: ExtensionLoadResult;
   files: readonly DiffFile[];
   getActiveLineCursor: SelectionInputs["getActiveLineCursor"];
+  getActiveNoteId: SelectionInputs["getActiveNoteId"];
   getSelection: SelectionInputs["getSelection"];
   getLayout: () => ExtensionCanonicalResolvedLayout;
   reviewGeneration: AppBootstrap;
@@ -118,6 +122,7 @@ export function useExtensionRuntimeBridge({
     getLayout,
     getSelection,
     getActiveLineCursor,
+    getActiveNoteId,
   });
   const commandsRef = useRef<readonly AppCommand[]>([]);
   const navigationRef = useRef<ExtensionRuntimeNavigationBindings>(unavailableNavigation);
@@ -142,13 +147,27 @@ export function useExtensionRuntimeBridge({
     appAliveRef.current = true;
     activeRegistryRef.current = extensions?.registry;
     activeReviewGenerationRef.current = reviewGeneration;
-    committedSelectionRef.current = { files, getLayout, getSelection, getActiveLineCursor };
+    committedSelectionRef.current = {
+      files,
+      getLayout,
+      getSelection,
+      getActiveLineCursor,
+      getActiveNoteId,
+    };
 
     return () => {
       // Layout cleanup closes the hard-remount window before the parent can publish a successor.
       appAliveRef.current = false;
     };
-  }, [extensions?.registry, files, getActiveLineCursor, getLayout, getSelection, reviewGeneration]);
+  }, [
+    extensions?.registry,
+    files,
+    getActiveLineCursor,
+    getActiveNoteId,
+    getLayout,
+    getSelection,
+    reviewGeneration,
+  ]);
 
   const getCommittedFileViews = useCallback(
     () => projectFileViews(committedSelectionRef.current.files),
@@ -191,6 +210,7 @@ export function useExtensionRuntimeBridge({
       selectedFileId: fileId,
       selectedHunkIndex: hunkIndex,
       lineCursor: current.getActiveLineCursor(),
+      activeNoteId: current.getActiveNoteId(),
     });
   }, [projectFileViews]);
 
@@ -202,8 +222,9 @@ export function useExtensionRuntimeBridge({
       selectedFileId: fileId,
       selectedHunkIndex: hunkIndex,
       lineCursor: getActiveLineCursor(),
+      activeNoteId: getActiveNoteId(),
     });
-  }, [files, getActiveLineCursor, getLayout, getSelection, projectFileViews]);
+  }, [files, getActiveLineCursor, getActiveNoteId, getLayout, getSelection, projectFileViews]);
 
   const getSelectedFileId = useCallback(
     () => committedSelectionRef.current.getSelection().fileId,

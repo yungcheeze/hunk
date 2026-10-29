@@ -12,6 +12,16 @@ import type { ReviewHunkSpan } from "../../core/review/geometry";
 import type { ReviewRangeAnchorV1 } from "../../core/review/types";
 import { fileLabel } from "./files";
 
+/** One extension command offered on the active note's action row. */
+export interface NoteCommandAction {
+  /** The namespaced command id, unique among the row's actions. */
+  id: string;
+  /** The command's first resolved chord, or empty when it is unbound. */
+  keyLabel: string;
+  label: string;
+  run: () => void;
+}
+
 export interface VisibleAgentNote {
   id: string;
   annotation: AgentAnnotation;
@@ -27,6 +37,8 @@ export interface VisibleAgentNote {
   active?: boolean;
   /** Resolved keyboard labels advertised while the card is active. */
   actionKeyLabels?: { delete: string; edit: string; reply: string };
+  /** Extension commands offered on the card's action row while it is active. */
+  commandActions?: readonly NoteCommandAction[];
   /** Make this semantic card the keyboard action target when its card is clicked. */
   onActivate?: () => void;
   /** Shared semantic relationship metadata; static sidecars omit it. */

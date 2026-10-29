@@ -1061,6 +1061,16 @@ export function createExtensionApi(
         }
       }
 
+      if (command.checked !== undefined && typeof command.checked !== "function") {
+        throw new Error("registerCommand checked must be a function returning a boolean.");
+      }
+      if (command.noteAction !== undefined) {
+        assertNonEmptyString(
+          command.noteAction,
+          "registerCommand noteAction must be a non-empty label.",
+        );
+      }
+
       registry.commands.push({ extensionId: metadata.id, command, handler });
     },
     transformChangeset(fn: ChangesetTransform) {

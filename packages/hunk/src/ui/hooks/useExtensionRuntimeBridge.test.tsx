@@ -21,6 +21,7 @@ interface RuntimeFacts {
   reviewGeneration: AppBootstrap;
   selectedFileId: string | null;
   selectedHunkIndex: number | null;
+  activeNoteId?: string | null;
 }
 
 /** Build one public host command for command-control liveness tests. */
@@ -58,6 +59,7 @@ async function renderRuntime(
       extensions: facts.extensions,
       files: facts.files,
       getActiveLineCursor: () => null,
+      getActiveNoteId: () => facts.activeNoteId ?? null,
       getLayout: () => "unified",
       getSelection: () => ({
         fileId: facts.selectedFileId,
@@ -215,6 +217,7 @@ describe("useExtensionRuntimeBridge", () => {
         extensions,
         files: generation.changeset.files,
         getActiveLineCursor: () => null,
+        getActiveNoteId: () => null,
         getLayout: () => "unified",
         getSelection: () => ({ fileId: "alpha", hunkIndex: 0 }),
         reviewGeneration: generation,
@@ -343,6 +346,7 @@ describe("useExtensionRuntimeBridge", () => {
       reviewGeneration: bootstrap,
       selectedFileId: "alpha",
       selectedHunkIndex: 0,
+      activeNoteId: "note:alpha",
     });
 
     try {
@@ -354,11 +358,14 @@ describe("useExtensionRuntimeBridge", () => {
           files: [beta],
           selectedFileId: "beta",
           selectedHunkIndex: 0,
+          activeNoteId: null,
         }),
       );
       await harness.settle();
 
       expect(selection.file?.id).toBe("alpha");
+      expect(selection.activeNoteId).toBe("note:alpha");
+      expect(harness.current().getSelection().activeNoteId).toBeNull();
       expect(Object.isFrozen(selection)).toBe(true);
       expect(Object.isFrozen(selection.file)).toBe(true);
       navigation.selectFile("beta");

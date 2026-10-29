@@ -119,7 +119,7 @@ function toExtensionMenuEntries(
     }
 
     previousOwner = owner;
-    specs.push({ commandId: command.id });
+    specs.push({ commandId: command.id, checked: command.checked?.() });
   }
 
   return toMenuEntries(commands, specs);

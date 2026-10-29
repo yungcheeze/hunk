@@ -30,6 +30,8 @@ export interface BuildExtensionReviewSelectionOptions {
   selectedHunkIndex: number | null;
   /** The visible current-line cursor, after App applies the cursor-line preference. */
   lineCursor?: Pick<LineCursor, "fileId" | "hunkIndex" | "target"> | null;
+  /** The saved note keyboard note actions address, or `null`. */
+  activeNoteId?: string | null;
 }
 
 /**
@@ -51,6 +53,7 @@ export function buildExtensionReviewSelection({
   selectedFileId,
   selectedHunkIndex,
   lineCursor = null,
+  activeNoteId = null,
 }: BuildExtensionReviewSelectionOptions): ExtensionReviewSelection {
   const file =
     selectedFileId === null
@@ -58,7 +61,14 @@ export function buildExtensionReviewSelection({
       : files.find((candidate) => candidate.id === selectedFileId);
 
   if (!file) {
-    return Object.freeze({ file: null, hunkIndex: null, currentLine: null, files, layout });
+    return Object.freeze({
+      file: null,
+      hunkIndex: null,
+      currentLine: null,
+      files,
+      layout,
+      activeNoteId,
+    });
   }
 
   const hunkIndex = resolveHunkIndex(file, selectedHunkIndex);
@@ -68,6 +78,7 @@ export function buildExtensionReviewSelection({
     currentLine: selectedLineCursor(file.id, hunkIndex, lineCursor),
     files,
     layout,
+    activeNoteId,
   });
 }
 
