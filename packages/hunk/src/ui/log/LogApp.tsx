@@ -297,6 +297,8 @@ export function LogApp({
         if (query !== null) void controller.search(query);
       });
   };
+  // In visual selection every motion grows the range, as j/k already do.
+  const visualExtend = () => ({ extend: controller.getSnapshot().visualSelectionActive });
   const commandHandlers: HistoryCommandHandlers = {
     "hunk.history.openSelection": () => void requestOpenSelected(),
     "hunk.history.copyRevision": () => copySelected(),
@@ -321,12 +323,14 @@ export function LogApp({
     "hunk.history.extendPrevious": () =>
       void controller.move(-1, viewportBodyHeight, { extend: true }),
     "hunk.history.extendNext": () => void controller.move(1, viewportBodyHeight, { extend: true }),
-    "hunk.history.pageUp": () => void controller.page(-1, viewportBodyHeight),
-    "hunk.history.pageDown": () => void controller.page(1, viewportBodyHeight),
-    "hunk.history.halfPageUp": () => void controller.halfPage(-1, viewportBodyHeight),
-    "hunk.history.halfPageDown": () => void controller.halfPage(1, viewportBodyHeight),
-    "hunk.history.jumpToFirst": () => void controller.first(viewportBodyHeight),
-    "hunk.history.jumpToLast": () => void controller.last(viewportBodyHeight),
+    "hunk.history.pageUp": () => void controller.page(-1, viewportBodyHeight, 1, visualExtend()),
+    "hunk.history.pageDown": () => void controller.page(1, viewportBodyHeight, 1, visualExtend()),
+    "hunk.history.halfPageUp": () =>
+      void controller.halfPage(-1, viewportBodyHeight, visualExtend()),
+    "hunk.history.halfPageDown": () =>
+      void controller.halfPage(1, viewportBodyHeight, visualExtend()),
+    "hunk.history.jumpToFirst": () => void controller.first(viewportBodyHeight, visualExtend()),
+    "hunk.history.jumpToLast": () => void controller.last(viewportBodyHeight, visualExtend()),
     "hunk.history.search": () => beginSearch(),
     "hunk.history.nextMatch": () => void controller.findMatch(1, viewportBodyHeight),
     "hunk.history.previousMatch": () => void controller.findMatch(-1, viewportBodyHeight),

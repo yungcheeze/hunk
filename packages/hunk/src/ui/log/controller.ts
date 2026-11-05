@@ -252,7 +252,12 @@ export class LogController {
     );
   }
 
-  page(delta: number, viewportBodyHeight: number, fraction = 1) {
+  page(
+    delta: number,
+    viewportBodyHeight: number,
+    fraction = 1,
+    options: { extend?: boolean } = {},
+  ) {
     const visibleCount = planLogViewportGeometry({
       rows: this.snapshot.rows,
       selected: this.snapshot.selected,
@@ -260,21 +265,25 @@ export class LogController {
       bodyHeight: viewportBodyHeight,
       groupByDay: !this.snapshot.presentation.graph,
     }).entries.length;
-    return this.move(delta * Math.max(1, Math.floor(visibleCount * fraction)), viewportBodyHeight);
+    return this.move(
+      delta * Math.max(1, Math.floor(visibleCount * fraction)),
+      viewportBodyHeight,
+      options,
+    );
   }
 
   /** Move the history focus by half of the visible commit rows. */
-  halfPage(delta: number, viewportBodyHeight: number) {
-    return this.page(delta, viewportBodyHeight, 0.5);
+  halfPage(delta: number, viewportBodyHeight: number, options: { extend?: boolean } = {}) {
+    return this.page(delta, viewportBodyHeight, 0.5, options);
   }
 
-  first(viewportBodyHeight: number) {
-    return this.select(0, viewportBodyHeight);
+  first(viewportBodyHeight: number, options: { extend?: boolean } = {}) {
+    return this.select(0, viewportBodyHeight, options);
   }
 
-  async last(viewportBodyHeight: number) {
+  async last(viewportBodyHeight: number, options: { extend?: boolean } = {}) {
     while (!this.snapshot.historyDone && !this.closed) await this.loadMore();
-    await this.select(this.snapshot.rows.length - 1, viewportBodyHeight);
+    await this.select(this.snapshot.rows.length - 1, viewportBodyHeight, options);
   }
 
   /** Replace the repeatable query without filtering topology; the host prompt owns editing. */
