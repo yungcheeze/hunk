@@ -13,8 +13,8 @@ function bundledMetadata(id: string) {
 }
 
 describe("runExtensionFactory", () => {
-  test("advertises note actions and the active note through extension API v33", () => {
-    expect(HUNK_EXTENSION_API_VERSION).toBe(33);
+  test("advertises the terminal controls through extension API v34", () => {
+    expect(HUNK_EXTENSION_API_VERSION).toBe(34);
   });
 
   test("applies a synchronous factory before returning, with nothing to await", () => {

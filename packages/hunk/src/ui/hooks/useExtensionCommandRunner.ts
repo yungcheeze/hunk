@@ -21,6 +21,7 @@ import type {
   ExtensionReviewNavigation,
   ExtensionReviewSelection,
   ExtensionStatusLineControls,
+  ExtensionTerminalControls,
   ExtensionWorkspace,
 } from "../../extension-api/types";
 import type { ExtensionLoadResult, RegisteredCommand } from "../../extensions/types";
@@ -45,6 +46,7 @@ export function useExtensionCommandRunner({
   createPromptControls,
   createReviewControls,
   createStatusLineControls,
+  createTerminalControls,
   createWorkspaceControls,
   extensions,
   getSelection,
@@ -62,6 +64,7 @@ export function useExtensionCommandRunner({
   createPromptControls: (extensionId: string) => ExtensionPromptControls;
   createReviewControls: (extensionId: string) => ExtensionReviewControls;
   createStatusLineControls: (extensionId: string) => ExtensionStatusLineControls;
+  createTerminalControls: () => ExtensionTerminalControls;
   createWorkspaceControls: (extensionId: string) => ExtensionWorkspace;
   extensions?: ExtensionLoadResult;
   getSelection: () => ExtensionReviewSelection;
@@ -94,6 +97,7 @@ export function useExtensionCommandRunner({
           statusLine: createStatusLineControls(registered.extensionId),
           prompts: createPromptControls(registered.extensionId),
           workspace: createWorkspaceControls(registered.extensionId),
+          terminal: createTerminalControls(),
           navigation: createNavigation(registered.extensionId),
         };
 
@@ -117,6 +121,7 @@ export function useExtensionCommandRunner({
       createPromptControls,
       createReviewControls,
       createStatusLineControls,
+      createTerminalControls,
       createWorkspaceControls,
       extensions,
       getSelection,

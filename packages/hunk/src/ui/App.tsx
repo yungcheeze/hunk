@@ -21,6 +21,7 @@ import { DOCUMENT_COMMAND_NAMES } from "../core/run/documentCommandCatalog";
 import type {
   ExtensionCanonicalResolvedLayout,
   ExtensionReviewReloadResult,
+  ExtensionTerminalControls,
 } from "../extension-api/types";
 import { experimentalFeatureEnabled, resolveExperimentalDiffFiles } from "../core/run/experimental";
 import { DEFAULT_FILE_GAP, DEFAULT_HUNK_GAP } from "../core/run/reviewGap";
@@ -127,6 +128,7 @@ import { HUNK_FILES_PANE_KEY } from "../extensions/extensionIds";
 import { maxFileHeaderStatsWidth } from "./lib/fileHeader";
 import { setMouseCapture } from "./lib/mouseCapture";
 import { openSelectedFileInEditor } from "./lib/openInEditor";
+import { runSuspended } from "./lib/runSuspended";
 import { resolveResponsiveLayout, resolveResponsiveViewport } from "./lib/responsive";
 import type { WorkspaceRefreshRequest } from "./currentReviewRefresh";
 import { ThemeController } from "./theme/controller";
@@ -680,6 +682,15 @@ export function App({
     [createReviewCapabilityLease, statusLineStore],
   );
 
+  /** Running a program in this terminal is not review state, so no lease guards it. */
+  const createExtensionTerminal = useCallback(
+    (): ExtensionTerminalControls => ({
+      runSuspended: (command, options) =>
+        runSuspended({ command, cwd: options?.cwd ?? extensions?.context.cwd, renderer }),
+    }),
+    [extensions, renderer],
+  );
+
   /** Inline prompts scoped and attributed exactly like dialogs. */
   const createExtensionPrompts = useCallback(
     (extensionId: string) => {
@@ -738,6 +749,7 @@ export function App({
     createPromptControls: createExtensionPrompts,
     createReviewControls: createExtensionReviewControls,
     createStatusLineControls: createExtensionStatusLine,
+    createTerminalControls: createExtensionTerminal,
     createWorkspaceControls: extensionWorkspaceController.createWorkspaceControls,
     extensions,
     getSelection: getExtensionSelection,

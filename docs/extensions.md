@@ -355,8 +355,9 @@ and retires the replaced instance at that explicit ownership boundary.
 
 ### `hunk.apiVersion`
 
-The API generation this Hunk speaks (currently `33`). Branch on it if you want
-one file to support several Hunk versions. Version 33 adds command `checked` toggles in the
+The API generation this Hunk speaks (currently `34`). Branch on it if you want
+one file to support several Hunk versions. Version 34 adds `ctx.terminal.runSuspended`, which
+hands the terminal to a program and redraws after it; version 33 adds command `checked` toggles in the
 Extensions menu, command `noteAction` labels on the active note's action row, and
 `ctx.selection.activeNoteId`; version 32 adds `ctx.selection.layout`, the resolved
 split or unified layout; version 31 adds optional read-only workspace status,
@@ -1296,6 +1297,22 @@ export default function (hunk: HunkExtensionAPI) {
 Snapshots must be immutable — replace the set instead of mutating it, so
 `useSyncExternalStore` can compare references. Storing state in a hook inside
 the component instead would lose it every time the pane closes and unmounts.
+
+### Running a program in the terminal
+
+`ctx.terminal.runSuspended(command, { cwd })` suspends Hunk's interface, runs `command` with the
+terminal as its stdin, stdout and stderr, and redraws when it exits — the way the built-in
+open-in-editor works. It resolves `{ exitCode }`, and rejects when the program cannot start, the
+terminal session has closed, or another program already holds the terminal. `command[0]` is looked
+up on `PATH`; nothing goes through a shell. Hunk's event loop is blocked while the program runs, so
+file-watch reloads and session requests wait for it.
+
+```ts
+hunk.registerCommand({ id: "blame", title: "Blame in tig", key: "B" }, async (ctx) => {
+  const file = ctx.selection.file;
+  if (file) await ctx.terminal.runSuspended(["tig", "blame", file.path]);
+});
+```
 
 ### Status line
 

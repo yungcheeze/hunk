@@ -32,6 +32,7 @@ const review: ExtensionReviewControls = {
   clearPresentationScope: () => undefined,
 };
 const workspace = {} as ExtensionWorkspace;
+const terminal = { runSuspended: async () => ({ exitCode: 0 }) };
 const statusLine = {} as ExtensionStatusLineControls;
 const prompts = {} as ExtensionPromptControls;
 const selection = Object.freeze({
@@ -67,6 +68,7 @@ async function renderRunner({
       createPromptControls: () => prompts,
       createReviewControls: createReview,
       createStatusLineControls: () => statusLine,
+      createTerminalControls: () => terminal,
       createWorkspaceControls: () => workspace,
       extensions,
       getSelection: () => selection,
@@ -111,6 +113,7 @@ describe("useExtensionCommandRunner", () => {
         review,
         selection,
         sidebars: panes,
+        terminal,
         workspace,
       });
       expect(context?.cwd).toBe("/repo");

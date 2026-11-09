@@ -21,7 +21,7 @@
  * Extensions can branch on `hunk.apiVersion` so a newer Hunk can keep loading
  * older extensions without guessing at their expectations.
  */
-export const HUNK_EXTENSION_API_VERSION = 33;
+export const HUNK_EXTENSION_API_VERSION = 34;
 export type HunkExtensionApiVersion = typeof HUNK_EXTENSION_API_VERSION;
 
 export type ExtensionNotifyType = "info" | "warning" | "error";
@@ -2382,6 +2382,30 @@ export interface ExtensionSessionOptions {
   viewPreferences?: "default" | "transient";
 }
 
+/** How a program handed the terminal ended. */
+export interface ExtensionTerminalResult {
+  /** The program's exit status. */
+  readonly exitCode: number;
+}
+
+/** Run a program in the terminal Hunk is drawn in. */
+export interface ExtensionTerminalControls {
+  /**
+   * Hand the terminal to a program and take it back when it exits.
+   *
+   * Hunk suspends its interface, runs `command` with the terminal as its stdin, stdout and
+   * stderr, and redraws when it exits, as the built-in open-in-editor does. `command[0]` is
+   * looked up on PATH and nothing goes through a shell. Hunk's event loop is blocked for the
+   * program's duration, so reloads and daemon requests wait for it. `options.cwd` defaults to
+   * the extension context's `cwd`. The promise rejects when the program cannot start, the
+   * terminal session has closed, or another program already holds the terminal.
+   */
+  runSuspended(
+    command: readonly string[],
+    options?: { readonly cwd?: string },
+  ): Promise<ExtensionTerminalResult>;
+}
+
 /** What a command handler receives when its key fires. */
 export interface ExtensionCommandContext extends ExtensionContext {
   /** Live access to the public built-in command table. */
@@ -2442,6 +2466,8 @@ export interface ExtensionCommandContext extends ExtensionContext {
    * its real filesystem outcome.
    */
   readonly workspace: ExtensionWorkspace;
+  /** Run a program in this terminal, such as an editor, and return to the review after it. */
+  readonly terminal: ExtensionTerminalControls;
 }
 
 export type ExtensionCommandHandler = (ctx: ExtensionCommandContext) => void | Promise<void>;
