@@ -44,7 +44,7 @@ describe("planConfirmDialogBody", () => {
     const layout = planConfirmDialogBody({
       bodyLines,
       scroll: 1000,
-      showAttribution: true,
+      subtitle: "",
       terminalHeight: 20,
       terminalWidth: 80,
       title: "Commit",
@@ -61,7 +61,7 @@ describe("planConfirmDialogBody", () => {
       planConfirmDialogBody({
         bodyLines: [line],
         scroll: 0,
-        showAttribution: false,
+        subtitle: "",
         terminalHeight: 30,
         terminalWidth,
         title: "Commit",

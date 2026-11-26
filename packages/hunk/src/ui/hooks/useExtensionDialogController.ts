@@ -74,7 +74,7 @@ export function useExtensionDialogController({
       ? planConfirmDialogBody({
           bodyLines: request.bodyLines,
           scroll,
-          showAttribution: request.showAttribution,
+          subtitle: request.subtitle,
           terminalHeight,
           terminalWidth,
           title: request.title,

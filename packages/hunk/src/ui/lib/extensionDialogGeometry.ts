@@ -55,26 +55,32 @@ export function extensionDialogWidth(terminalWidth: number) {
  * Prose wrapped by its author, such as a commit message at 72 columns, keeps
  * its own line breaks instead of being re-wrapped a few cells short.
  */
-function confirmDialogWidth(title: string, bodyLines: readonly string[], terminalWidth: number) {
+function confirmDialogWidth(
+  title: string,
+  subtitle: string,
+  bodyLines: readonly string[],
+  terminalWidth: number,
+) {
   // Border and padding take two cells a side; the title row also holds " [Esc]".
-  const content = Math.max(title.length + 6, ...bodyLines.map((line) => line.length)) + 4;
+  const content =
+    Math.max(title.length + 6, subtitle.length, ...bodyLines.map((line) => line.length)) + 4;
   return Math.min(
     Math.max(extensionDialogWidth(terminalWidth), content),
     Math.max(40, terminalWidth - 8),
   );
 }
 
-/** Row plan for a confirm dialog's attribution and scrollable body. */
+/** Row plan for a confirm dialog's subtitle, the gap under it, and its scrollable body. */
 export interface ConfirmDialogBodyLayout {
   frameWidth: number;
   bodyWidth: number;
-  attributionRows: number;
-  attributionGapRows: number;
+  /** Rows above the body: the subtitle, then a gap when a body follows. */
+  headerRows: number;
   body: WindowedDialogText;
 }
 
 /**
- * Plans a confirm dialog's attribution and body rows inside the terminal.
+ * Plans a confirm dialog's header and body rows inside the terminal.
  *
  * The dialog controller clamps scrolling with the same plan the dialog draws,
  * so a key never scrolls past the last row on screen.
@@ -82,37 +88,34 @@ export interface ConfirmDialogBodyLayout {
 export function planConfirmDialogBody({
   bodyLines,
   scroll,
-  showAttribution,
+  subtitle,
   terminalHeight,
   terminalWidth,
   title,
 }: {
   bodyLines: readonly string[];
   scroll: number;
-  showAttribution: boolean;
+  subtitle: string;
   terminalHeight: number;
   terminalWidth: number;
   title: string;
 }): ConfirmDialogBodyLayout {
   const frame = resolveModalGeometry({
-    width: confirmDialogWidth(title, bodyLines, terminalWidth),
+    width: confirmDialogWidth(title, subtitle, bodyLines, terminalWidth),
     height: Number.MAX_SAFE_INTEGER,
     terminalWidth,
     terminalHeight,
   });
   const bodyWidth = Math.max(1, frame.width - 4);
-  const availableBodyRows = Math.max(0, frame.height - confirmDialogHeight(0));
-  const attributionRows = showAttribution && availableBodyRows > 0 ? 1 : 0;
-  const rowsAfterAttribution = Math.max(0, availableBodyRows - attributionRows);
-  const attributionGapRows =
-    attributionRows > 0 && bodyLines.length > 0 && rowsAfterAttribution > 1 ? 1 : 0;
-  const bodyRows = Math.max(0, rowsAfterAttribution - attributionGapRows);
+  const availableRows = Math.max(0, frame.height - confirmDialogHeight(0));
+  // A gap keeps the body from reading as part of the title block.
+  const headerRows = Math.min(availableRows, (subtitle ? 1 : 0) + (bodyLines.length > 0 ? 1 : 0));
+  const bodyRows = availableRows - headerRows;
 
   return {
     frameWidth: frame.width,
     bodyWidth,
-    attributionRows,
-    attributionGapRows,
+    headerRows,
     body: windowDialogText(bodyLines, bodyWidth, bodyRows, scroll),
   };
 }

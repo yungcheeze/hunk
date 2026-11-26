@@ -45,6 +45,8 @@ interface ExtensionDialogRequestBase {
 
 export interface ExtensionConfirmDialogRequest extends ExtensionDialogRequestBase {
   kind: "confirm";
+  /** Quiet line under the title; empty when the extension gave none. */
+  subtitle: string;
   bodyLines: string[];
   confirmLabel: string;
   cancelLabel: string;
@@ -266,6 +268,10 @@ export function createExtensionDialogQueue(): ExtensionDialogQueue {
               extensionId,
               showAttribution,
               title,
+              subtitle:
+                typeof options.subtitle === "string"
+                  ? sanitizeTerminalLine(options.subtitle.trim())
+                  : "",
               bodyLines: normalizeBodyLines(options.body),
               confirmLabel: normalizeLabel(options.confirmLabel, DEFAULT_CONFIRM_LABEL),
               cancelLabel: normalizeLabel(options.cancelLabel, DEFAULT_CANCEL_LABEL),

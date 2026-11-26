@@ -411,7 +411,7 @@ describe("extension dialogs", () => {
     });
   });
 
-  test("shows one action when the confirm and cancel labels match", async () => {
+  test("shows the subtitle, and one action when the confirm and cancel labels match", async () => {
     const repo = createTestRepo("hunk-ext-dialog-one-action-");
     const extDir = createTempDir("hunk-ext-dialog-one-action-ext-");
     const logPath = join(extDir, "probe.log");
@@ -419,7 +419,7 @@ describe("extension dialogs", () => {
     writeDialogFixture(
       extPath,
       logPath,
-      `ctx.dialogs.confirm({ title: "Commit message", body: "Why it changed.", confirmLabel: "close", cancelLabel: "close" })`,
+      `ctx.dialogs.confirm({ title: "Commit message", subtitle: "a3ed7b2 · ucizi · 9 minutes ago", body: "Why it changed.", confirmLabel: "close", cancelLabel: "close" })`,
     );
 
     const bootstrap = await launchWithExtension(repo, extPath);
@@ -433,6 +433,7 @@ describe("extension dialogs", () => {
         "the one-action dialog to open",
       );
 
+      expect(setup.captureCharFrame()).toContain("a3ed7b2 · ucizi · 9 minutes ago");
       expect(setup.captureCharFrame()).toContain("enter/esc close");
       expect(setup.captureCharFrame()).not.toContain("esc/n");
     });

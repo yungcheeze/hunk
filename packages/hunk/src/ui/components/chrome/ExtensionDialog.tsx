@@ -100,7 +100,8 @@ export function ExtensionDialog({
   }
 
   if (!confirmBody) return null;
-  const { attributionGapRows, attributionRows, body, bodyWidth, frameWidth } = confirmBody;
+  const { body, bodyWidth, frameWidth, headerRows } = confirmBody;
+  const subtitleRows = request.subtitle && headerRows > 0 ? 1 : 0;
 
   return (
     <ConfirmDialog
@@ -113,7 +114,10 @@ export function ExtensionDialog({
               { keyLabel: "esc/n", label: request.cancelLabel, run: onCancel },
             ]
       }
-      height={confirmDialogHeight(body.lines.length + attributionRows + attributionGapRows)}
+      footerNote={
+        request.showAttribution ? `${extensionToastPrefix()} ${request.extensionId}` : undefined
+      }
+      height={confirmDialogHeight(headerRows + body.lines.length)}
       terminalHeight={terminalHeight}
       terminalWidth={terminalWidth}
       theme={theme}
@@ -126,18 +130,22 @@ export function ExtensionDialog({
         else if (direction === "down") onScrollBody(1);
       }}
     >
-      {attributionRows > 0 ? (
+      {subtitleRows > 0 ? (
         <box style={{ width: "100%", height: 1 }}>
-          <text fg={theme.badgeNeutral}>{attributionText(request.extensionId, bodyWidth)}</text>
+          <text fg={theme.muted}>{fitText(request.subtitle, bodyWidth)}</text>
         </box>
       ) : null}
-      {attributionGapRows > 0 ? <box style={{ width: "100%", height: 1 }} /> : null}
-      {body.lines.map((line, index) => (
-        // Body lines are positional prose, so their index is their identity.
-        <box key={`${index}-${line}`} style={{ width: "100%", height: 1 }}>
-          <text fg={theme.muted}>{fitText(line, bodyWidth)}</text>
-        </box>
-      ))}
+      {headerRows > subtitleRows ? <box style={{ width: "100%", height: 1 }} /> : null}
+      {body.lines.map((line, index) => {
+        // The scroll position marker closes a truncated body; it is chrome, not prose.
+        const isMarker = body.truncated && index === body.lines.length - 1;
+        return (
+          // Body lines are positional prose, so their index is their identity.
+          <box key={`${index}-${line}`} style={{ width: "100%", height: 1 }}>
+            <text fg={isMarker ? theme.badgeNeutral : theme.text}>{fitText(line, bodyWidth)}</text>
+          </box>
+        );
+      })}
     </ConfirmDialog>
   );
 }

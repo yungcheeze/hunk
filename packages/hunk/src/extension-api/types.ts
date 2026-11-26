@@ -2119,6 +2119,8 @@ export interface ExtensionReviewReloadControls {
 /** One question put to the user as a modal confirm dialog. */
 export interface ExtensionConfirmOptions {
   title: string;
+  /** One quiet line under the title, such as who made a commit and when. */
+  subtitle?: string;
   /** Optional body lines shown above the actions; a body taller than the dialog scrolls. */
   body?: string;
   /** Label for the accepting action. Defaults to "ok". */

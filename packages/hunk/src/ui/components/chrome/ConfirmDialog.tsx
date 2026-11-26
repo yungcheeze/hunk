@@ -22,9 +22,12 @@ export interface ConfirmDialogAction {
 /** Render the shared mouse-clickable key legend used by modal action footers. */
 export function DialogActionRow({
   actions,
+  note,
   theme,
 }: {
   actions: ConfirmDialogAction[];
+  /** Quiet text pinned to the row's right edge, such as who raised the dialog. */
+  note?: string;
   theme: AppTheme;
 }) {
   const [hoveredActionKey, setHoveredActionKey] = useState<string | null>(null);
@@ -58,6 +61,12 @@ export function DialogActionRow({
           </box>
         );
       })}
+      {note ? (
+        <>
+          <box style={{ flexGrow: 1 }} />
+          <text fg={theme.badgeNeutral}>{note}</text>
+        </>
+      ) : null}
     </box>
   );
 }
@@ -79,6 +88,7 @@ export function DialogActionRow({
 export function ConfirmDialog({
   actions,
   children,
+  footerNote,
   height,
   onClose,
   onMouseScroll,
@@ -90,6 +100,8 @@ export function ConfirmDialog({
 }: {
   actions: ConfirmDialogAction[];
   children: ReactNode;
+  /** Quiet text at the right of the action row. */
+  footerNote?: string;
   height: number;
   /** Invoked by the frame's backdrop click and [Esc] affordance. */
   onClose?: () => void;
@@ -118,7 +130,7 @@ export function ConfirmDialog({
     >
       {children}
       {showActionGap ? <box style={{ width: "100%", height: 1 }} /> : null}
-      {showActions ? <DialogActionRow actions={actions} theme={theme} /> : null}
+      {showActions ? <DialogActionRow actions={actions} note={footerNote} theme={theme} /> : null}
     </ModalFrame>
   );
 }

@@ -1,8 +1,11 @@
-import type { MouseEvent as TuiMouseEvent } from "@opentui/core";
+import { createTextAttributes, type MouseEvent as TuiMouseEvent } from "@opentui/core";
 import type { ReactNode } from "react";
 import { resolveModalGeometry } from "../../lib/modalGeometry";
 import { fitText, padText } from "../../lib/text";
 import type { AppTheme } from "../../themes";
+
+/** The title's weight sets it above the body text, which shares its color. */
+const TITLE_ATTRIBUTES = createTextAttributes({ bold: true });
 
 /** Render a centered framed modal container that other dialogs can reuse. */
 export function ModalFrame({
@@ -81,7 +84,9 @@ export function ModalFrame({
             flexDirection: "row",
           }}
         >
-          <text fg={theme.text}>{padText(fitText(title, titleWidth), titleWidth)}</text>
+          <text fg={theme.text} attributes={TITLE_ATTRIBUTES}>
+            {padText(fitText(title, titleWidth), titleWidth)}
+          </text>
           {closeText ? (
             <box
               onMouseUp={(event: TuiMouseEvent) => {
