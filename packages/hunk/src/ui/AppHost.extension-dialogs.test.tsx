@@ -383,7 +383,7 @@ describe("extension dialogs", () => {
     );
   });
 
-  test("cuts a long title with an ellipsis before the close affordance", async () => {
+  test("cuts a title wider than the terminal with an ellipsis, with no [Esc] badge beside the actions", async () => {
     const repo = createTestRepo("hunk-ext-dialog-long-title-");
     const extDir = createTempDir("hunk-ext-dialog-long-title-ext-");
     const logPath = join(extDir, "probe.log");
@@ -407,7 +407,9 @@ describe("extension dialogs", () => {
       );
 
       // The char frame renders the ellipsis as ".", so either spelling ends the title.
-      expect(setup.captureCharFrame()).toMatch(/[….]\[Esc\]/);
+      expect(setup.captureCharFrame()).toMatch(/fix\(runner-gateway\).*[….] │/);
+      // The footer already names Esc, so the frame doesn't repeat it.
+      expect(setup.captureCharFrame()).not.toContain("[Esc]");
     });
   });
 

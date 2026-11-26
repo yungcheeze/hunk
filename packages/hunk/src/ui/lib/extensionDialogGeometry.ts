@@ -61,9 +61,9 @@ function confirmDialogWidth(
   bodyLines: readonly string[],
   terminalWidth: number,
 ) {
-  // Border and padding take two cells a side; the title row also holds " [Esc]".
+  // Border and padding take two cells a side.
   const content =
-    Math.max(title.length + 6, subtitle.length, ...bodyLines.map((line) => line.length)) + 4;
+    Math.max(title.length, subtitle.length, ...bodyLines.map((line) => line.length)) + 4;
   return Math.min(
     Math.max(extensionDialogWidth(terminalWidth), content),
     Math.max(40, terminalWidth - 8),

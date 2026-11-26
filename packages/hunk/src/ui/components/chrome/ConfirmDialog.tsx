@@ -125,6 +125,7 @@ export function ConfirmDialog({
       theme={theme}
       title={title}
       width={width}
+      closeBadge={!showActions}
       onClose={onClose}
       onMouseScroll={onMouseScroll}
     >

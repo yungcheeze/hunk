@@ -10,6 +10,7 @@ const TITLE_ATTRIBUTES = createTextAttributes({ bold: true });
 /** Render a centered framed modal container that other dialogs can reuse. */
 export function ModalFrame({
   children,
+  closeBadge = true,
   height,
   onClose,
   onMouseScroll,
@@ -20,6 +21,8 @@ export function ModalFrame({
   width,
 }: {
   children: ReactNode;
+  /** Show the clickable [Esc] badge; a footer that already names Esc makes it redundant. */
+  closeBadge?: boolean;
   height: number;
   onClose?: () => void;
   onMouseScroll?: (event: TuiMouseEvent) => void;
@@ -40,7 +43,7 @@ export function ModalFrame({
     terminalWidth,
     terminalHeight,
   });
-  const closeText = onClose ? "[Esc]" : "";
+  const closeText = onClose && closeBadge ? "[Esc]" : "";
   // The border and the title row's padding each take a cell on both sides.
   const titleWidth = Math.max(1, clampedWidth - 4 - (closeText ? closeText.length + 1 : 0));
 
