@@ -1,6 +1,14 @@
 /** Border, title, and padding rows ModalFrame reserves around its children. */
 export const MODAL_FRAME_CHROME_ROWS = 5;
 
+/** Rows ConfirmDialog adds around the body: ModalFrame chrome plus spacer and action row. */
+const CONFIRM_DIALOG_CHROME_ROWS = MODAL_FRAME_CHROME_ROWS + 2;
+
+/** Modal height for a ConfirmDialog whose body renders the given number of rows. */
+export function confirmDialogHeight(bodyRows: number) {
+  return bodyRows + CONFIRM_DIALOG_CHROME_ROWS;
+}
+
 /** Concrete dimensions and placement of a modal inside one terminal viewport. */
 export interface ModalGeometry {
   width: number;

@@ -1,6 +1,7 @@
 import type { ViewPreferenceQuitController } from "../../hooks/useViewPreferenceQuitController";
 import type { AppTheme } from "../../themes";
-import { ConfirmDialog, confirmDialogHeight } from "./ConfirmDialog";
+import { confirmDialogHeight } from "../../lib/modalGeometry";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 /** Render the shared save-or-discard prompt for changed view preferences. */
 export function ViewPreferenceQuitDialog({

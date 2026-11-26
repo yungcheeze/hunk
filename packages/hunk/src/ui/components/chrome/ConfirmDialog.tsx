@@ -1,7 +1,11 @@
 import type { MouseEvent as TuiMouseEvent } from "@opentui/core";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { MODAL_FRAME_CHROME_ROWS, resolveModalGeometry } from "../../lib/modalGeometry";
+import {
+  confirmDialogHeight,
+  MODAL_FRAME_CHROME_ROWS,
+  resolveModalGeometry,
+} from "../../lib/modalGeometry";
 import type { AppTheme } from "../../themes";
 import { ModalFrame } from "./ModalFrame";
 
@@ -13,14 +17,6 @@ export interface ConfirmDialogAction {
   label: string;
   /** Run the choice. Invoked on mouse click; keyboard routing stays with the caller. */
   run: () => void;
-}
-
-/** Rows ConfirmDialog adds around the body: ModalFrame chrome plus spacer and action row. */
-const CONFIRM_DIALOG_CHROME_ROWS = MODAL_FRAME_CHROME_ROWS + 2;
-
-/** Modal height for a ConfirmDialog whose body renders the given number of rows. */
-export function confirmDialogHeight(bodyRows: number) {
-  return bodyRows + CONFIRM_DIALOG_CHROME_ROWS;
 }
 
 /** Render the shared mouse-clickable key legend used by modal action footers. */
@@ -85,6 +81,7 @@ export function ConfirmDialog({
   children,
   height,
   onClose,
+  onMouseScroll,
   terminalHeight,
   terminalWidth,
   theme,
@@ -96,6 +93,8 @@ export function ConfirmDialog({
   height: number;
   /** Invoked by the frame's backdrop click and [Esc] affordance. */
   onClose?: () => void;
+  /** Wheel input over the dialog, for a body that scrolls. */
+  onMouseScroll?: (event: TuiMouseEvent) => void;
   terminalHeight: number;
   terminalWidth: number;
   theme: AppTheme;
@@ -115,6 +114,7 @@ export function ConfirmDialog({
       title={title}
       width={width}
       onClose={onClose}
+      onMouseScroll={onMouseScroll}
     >
       {children}
       {showActionGap ? <box style={{ width: "100%", height: 1 }} /> : null}

@@ -44,6 +44,8 @@ export interface UseAppKeyboardShortcutsOptions {
   acceptExtensionDialog: () => void;
   cancelExtensionDialog: () => void;
   moveExtensionDialogSelection: (delta: number) => void;
+  /** Scroll the visible confirm dialog's body by rows or pages. */
+  scrollExtensionDialogBody: (delta: number, unit?: "row" | "page") => void;
   extensionTrustPromptOpen: boolean;
   trustRepoExtensions: () => void;
   /**
@@ -126,6 +128,7 @@ export function useAppKeyboardShortcuts({
   acceptExtensionDialog,
   cancelExtensionDialog,
   moveExtensionDialogSelection,
+  scrollExtensionDialogBody,
   extensionTrustPromptOpen,
   trustRepoExtensions,
   isFileViewModeActive,
@@ -185,6 +188,7 @@ export function useAppKeyboardShortcuts({
   const acceptExtensionDialogRef = useRef(acceptExtensionDialog);
   const cancelExtensionDialogRef = useRef(cancelExtensionDialog);
   const moveExtensionDialogSelectionRef = useRef(moveExtensionDialogSelection);
+  const scrollExtensionDialogBodyRef = useRef(scrollExtensionDialogBody);
 
   activeMenuIdRef.current = activeMenuId;
   commandsRef.current = commands;
@@ -211,6 +215,7 @@ export function useAppKeyboardShortcuts({
   acceptExtensionDialogRef.current = acceptExtensionDialog;
   cancelExtensionDialogRef.current = cancelExtensionDialog;
   moveExtensionDialogSelectionRef.current = moveExtensionDialogSelection;
+  scrollExtensionDialogBodyRef.current = scrollExtensionDialogBody;
 
   /**
    * Stop a key dead: the focused renderable never sees it, and neither do
@@ -386,6 +391,17 @@ export function useAppKeyboardShortcuts({
 
       if (key.name === "n" || key.sequence === "n") {
         cancelExtensionDialogRef.current();
+        return "mine";
+      }
+
+      // Ahead of the vertical keys, whose commands also claim Page Up/Down as one step.
+      if (key.name === "pageup" || key.name === "pagedown") {
+        scrollExtensionDialogBodyRef.current(key.name === "pageup" ? -1 : 1, "page");
+        return "mine";
+      }
+
+      // A body taller than the dialog scrolls with the review's own vertical keys.
+      if (moveVerticalModalSelection(key, scrollExtensionDialogBodyRef.current)) {
         return "mine";
       }
     }

@@ -301,12 +301,85 @@ describe("extension dialogs", () => {
         );
 
         const frame = setup.captureCharFrame();
-        expect(frame).toContain("…");
+        expect(frame).toMatch(/1-\d+ of \d+/);
         expect(frame).toContain("enter/y");
         expect(frame).toContain("esc/n");
       },
       undefined,
       { width: 50, height: 12 },
+    );
+  });
+
+  test("scrolls a confirm body taller than the dialog with the arrow keys and the wheel", async () => {
+    const repo = createTestRepo("hunk-ext-dialog-scroll-confirm-");
+    const extDir = createTempDir("hunk-ext-dialog-scroll-confirm-ext-");
+    const logPath = join(extDir, "probe.log");
+    const extPath = join(extDir, "ext.ts");
+    writeDialogFixture(
+      extPath,
+      logPath,
+      `ctx.dialogs.confirm({ title: "Commit message", body: Array.from({ length: 30 }, (_, i) => "body line " + (i + 1)).join("\\n") })`,
+    );
+
+    const bootstrap = await launchWithExtension(repo, extPath);
+    await withAppHost(
+      bootstrap,
+      async (setup) => {
+        await act(async () => {
+          await setup.mockInput.typeText("Y");
+        });
+        await flushUntil(
+          setup,
+          () => setup.captureCharFrame().includes("Commit message"),
+          "the long confirm dialog to open",
+        );
+        expect(setup.captureCharFrame()).toContain("body line 1 ");
+        expect(setup.captureCharFrame()).not.toContain("body line 30");
+
+        // Page Down moves a whole screen, not the single row the vertical keys move.
+        await act(async () => {
+          await setup.mockInput.pressKey("\u001b[6~");
+        });
+        await flushUntil(
+          setup,
+          () => !setup.captureCharFrame().includes("body line 2 "),
+          "Page Down to scroll a screen",
+        );
+        expect(setup.captureCharFrame()).not.toMatch(/ 2-\d+ of 30/);
+
+        for (let press = 0; press < 40; press += 1) {
+          await act(async () => {
+            await setup.mockInput.pressArrow("down");
+          });
+        }
+        await flushUntil(
+          setup,
+          () => setup.captureCharFrame().includes("body line 30"),
+          "the body to scroll to its last line",
+        );
+        expect(setup.captureCharFrame()).toMatch(/\d+-30 of 30/);
+
+        const position = findTextPosition(setup.captureCharFrame(), "body line 30")!;
+        await act(async () => {
+          await setup.mockMouse.scroll(position.x, position.y, "up");
+        });
+        await flushUntil(
+          setup,
+          () => !setup.captureCharFrame().includes("body line 30"),
+          "the wheel to scroll the body back up",
+        );
+
+        await act(async () => {
+          await setup.mockInput.pressEnter();
+        });
+        await flushUntil(
+          setup,
+          () => readProbeLog(logPath).includes("answer true"),
+          "the scrolled dialog to resolve true",
+        );
+      },
+      undefined,
+      { width: 100, height: 20 },
     );
   });
 

@@ -2282,7 +2282,9 @@ the first. While a dialog is up it owns the keyboard: Escape cancels (`false`,
 or `null`), Enter accepts — the confirm action, the highlighted option, or the
 typed text — and review shortcuts stay suppressed underneath. Confirm dialogs
 also answer to `y`/`n`, select dialogs to `↑`/`↓`, and every dialog's actions
-and rows are clickable.
+and rows are clickable. A confirm body taller than the dialog scrolls with
+`↑`/`↓`, Page Up/Page Down and the mouse wheel, under a marker naming the
+visible lines.
 
 Two things resolve a dialog without the user: the session moving on, and bad
 arguments. A session reload — the refresh key, a watch-triggered reload, an

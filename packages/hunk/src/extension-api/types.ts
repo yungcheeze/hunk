@@ -2119,7 +2119,7 @@ export interface ExtensionReviewReloadControls {
 /** One question put to the user as a modal confirm dialog. */
 export interface ExtensionConfirmOptions {
   title: string;
-  /** Optional body lines shown above the actions. */
+  /** Optional body lines shown above the actions; a body taller than the dialog scrolls. */
   body?: string;
   /** Label for the accepting action. Defaults to "ok". */
   confirmLabel?: string;

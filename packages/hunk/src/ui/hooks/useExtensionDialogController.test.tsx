@@ -11,7 +11,11 @@ async function renderController() {
   function Harness() {
     const [reviewGeneration, setReviewGeneration] = useState<object>({});
     replaceReview = () => setReviewGeneration({});
-    controller = useExtensionDialogController({ reviewGeneration });
+    controller = useExtensionDialogController({
+      reviewGeneration,
+      terminalHeight: 20,
+      terminalWidth: 80,
+    });
     return null;
   }
 
@@ -62,6 +66,53 @@ describe("useExtensionDialogController", () => {
       expect(await typed).toBe("feature/typed");
       await flush(harness.setup);
       expect(harness.controller().request).toBeNull();
+    } finally {
+      await act(async () => harness.setup.renderer.destroy());
+    }
+  });
+
+  test("scrolls a long confirm body within its rows and starts the next dialog at the top", async () => {
+    const harness = await renderController();
+    const dialogs = harness.controller().createDialogs("probe");
+    const body = Array.from({ length: 40 }, (_, index) => `line ${index + 1}`).join("\n");
+    let first!: Promise<boolean>;
+    let second!: Promise<boolean>;
+
+    try {
+      await act(async () => {
+        first = dialogs.confirm({ title: "Commit", body });
+        second = dialogs.confirm({ title: "Next", body });
+      });
+      await flush(harness.setup);
+
+      const bodyAt = () => harness.controller().confirmBody!.body;
+      expect(bodyAt().start).toBe(0);
+
+      await act(async () => harness.controller().scrollBody(-1));
+      expect(bodyAt().start).toBe(0);
+
+      await act(async () => harness.controller().scrollBody(2));
+      expect(bodyAt().lines[0]).toBe("line 3");
+
+      await act(async () => harness.controller().scrollBody(1, "page"));
+      expect(bodyAt().start).toBe(2 + bodyAt().lines.length - 1);
+
+      await act(async () => harness.controller().scrollBody(100, "page"));
+      expect(bodyAt().start).toBe(bodyAt().maxStart);
+      expect(bodyAt().lines.at(-2)).toBe("line 40");
+
+      // One press back moves off the end at once: overshoot is never stored.
+      await act(async () => harness.controller().scrollBody(-1));
+      expect(bodyAt().start).toBe(bodyAt().maxStart - 1);
+
+      await act(async () => harness.controller().accept());
+      expect(await first).toBe(true);
+      await flush(harness.setup);
+      expect(harness.controller().request).toMatchObject({ title: "Next" });
+      expect(bodyAt().start).toBe(0);
+
+      await act(async () => harness.controller().cancel());
+      expect(await second).toBe(false);
     } finally {
       await act(async () => harness.setup.renderer.destroy());
     }

@@ -23,8 +23,8 @@ const DEFAULT_CONFIRM_LABEL = "ok";
 /** Default label for the dismissing action of a confirm dialog. */
 const DEFAULT_CANCEL_LABEL = "cancel";
 
-/** Body lines one confirm dialog may show; beyond this the modal stops being a prompt. */
-const MAX_CONFIRM_BODY_LINES = 6;
+/** Body lines one confirm dialog keeps; a body taller than the dialog scrolls. */
+const MAX_CONFIRM_BODY_LINES = 1000;
 
 /** What every queued dialog carries, whatever kind it is. */
 interface ExtensionDialogRequestBase {

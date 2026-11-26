@@ -5,12 +5,19 @@ import type {
   ExtensionSelectDialogRequest,
 } from "../../lib/extensionDialogs";
 import { extensionToastPrefix } from "../../lib/extensionNotifications";
-import { windowDialogText } from "../../lib/extensionDialogGeometry";
+import {
+  type ConfirmDialogBodyLayout,
+  extensionDialogWidth,
+} from "../../lib/extensionDialogGeometry";
 import { listWindowStart } from "../../lib/listWindow";
-import { MODAL_FRAME_CHROME_ROWS, resolveModalGeometry } from "../../lib/modalGeometry";
+import {
+  confirmDialogHeight,
+  MODAL_FRAME_CHROME_ROWS,
+  resolveModalGeometry,
+} from "../../lib/modalGeometry";
 import { fitText, padText } from "../../lib/text";
 import type { AppTheme } from "../../themes";
-import { ConfirmDialog, confirmDialogHeight, DialogActionRow } from "./ConfirmDialog";
+import { ConfirmDialog, DialogActionRow } from "./ConfirmDialog";
 import { ModalFrame } from "./ModalFrame";
 
 /**
@@ -26,28 +33,27 @@ import { ModalFrame } from "./ModalFrame";
  * every other modal surface; this component owns mouse parity only.
  */
 
-/** Width every extension dialog is drawn at, clamped to the terminal. */
-function dialogWidth(terminalWidth: number) {
-  return Math.min(72, Math.max(40, terminalWidth - 8));
-}
-
 /** The attribution line naming the extension that raised the dialog. */
 function attributionText(extensionId: string, width: number) {
   return fitText(`${extensionToastPrefix()} ${extensionId}`, width);
 }
 
 export function ExtensionDialog({
+  confirmBody,
   inputValue,
   onAccept,
   onCancel,
   onChangeInput,
   onPickOption,
+  onScrollBody,
   request,
   selectedIndex,
   terminalHeight,
   terminalWidth,
   theme,
 }: {
+  /** A confirm dialog's planned body, scrolled; null for the other kinds. */
+  confirmBody: ConfirmDialogBodyLayout | null;
   /** Live text of an input dialog's field; ignored by the other kinds. */
   inputValue: string;
   onAccept: (selectedIndexOverride?: number) => void;
@@ -55,6 +61,8 @@ export function ExtensionDialog({
   onChangeInput: (value: string) => void;
   /** Highlight one option row without accepting it, mirroring the theme selector. */
   onPickOption: (index: number) => void;
+  /** Scroll a confirm dialog's body by whole rows. */
+  onScrollBody: (delta: number) => void;
   request: ExtensionDialogRequest;
   selectedIndex: number;
   terminalHeight: number;
@@ -91,20 +99,8 @@ export function ExtensionDialog({
     );
   }
 
-  const frame = resolveModalGeometry({
-    width: dialogWidth(terminalWidth),
-    height: Number.MAX_SAFE_INTEGER,
-    terminalWidth,
-    terminalHeight,
-  });
-  const bodyWidth = Math.max(1, frame.width - 4);
-  const availableBodyRows = Math.max(0, frame.height - confirmDialogHeight(0));
-  const attributionRows = request.showAttribution && availableBodyRows > 0 ? 1 : 0;
-  const rowsAfterAttribution = Math.max(0, availableBodyRows - attributionRows);
-  const attributionGapRows =
-    attributionRows > 0 && request.bodyLines.length > 0 && rowsAfterAttribution > 1 ? 1 : 0;
-  const bodyRows = Math.max(0, rowsAfterAttribution - attributionGapRows);
-  const visibleBody = windowDialogText(request.bodyLines, bodyWidth, bodyRows);
+  if (!confirmBody) return null;
+  const { attributionGapRows, attributionRows, body, bodyWidth, frameWidth } = confirmBody;
 
   return (
     <ConfirmDialog
@@ -112,13 +108,18 @@ export function ExtensionDialog({
         { keyLabel: "enter/y", label: request.confirmLabel, run: onAccept },
         { keyLabel: "esc/n", label: request.cancelLabel, run: onCancel },
       ]}
-      height={confirmDialogHeight(visibleBody.lines.length + attributionRows + attributionGapRows)}
+      height={confirmDialogHeight(body.lines.length + attributionRows + attributionGapRows)}
       terminalHeight={terminalHeight}
       terminalWidth={terminalWidth}
       theme={theme}
       title={request.title}
-      width={frame.width}
+      width={frameWidth}
       onClose={onCancel}
+      onMouseScroll={(event) => {
+        const direction = event.scroll?.direction;
+        if (direction === "up") onScrollBody(-1);
+        else if (direction === "down") onScrollBody(1);
+      }}
     >
       {attributionRows > 0 ? (
         <box style={{ width: "100%", height: 1 }}>
@@ -126,7 +127,7 @@ export function ExtensionDialog({
         </box>
       ) : null}
       {attributionGapRows > 0 ? <box style={{ width: "100%", height: 1 }} /> : null}
-      {visibleBody.lines.map((line, index) => (
+      {body.lines.map((line, index) => (
         // Body lines are positional prose, so their index is their identity.
         <box key={`${index}-${line}`} style={{ width: "100%", height: 1 }}>
           <text fg={theme.muted}>{fitText(line, bodyWidth)}</text>
@@ -157,7 +158,7 @@ function ExtensionSelectDialog({
   theme: AppTheme;
 }) {
   const frame = resolveModalGeometry({
-    width: dialogWidth(terminalWidth),
+    width: extensionDialogWidth(terminalWidth),
     height: Math.min(Math.max(11, terminalHeight - 6), 24),
     terminalWidth,
     terminalHeight,
@@ -264,7 +265,7 @@ function ExtensionInputDialog({
 }) {
   // ModalFrame chrome plus field, spacer, actions, and optional attribution + spacer.
   const frame = resolveModalGeometry({
-    width: dialogWidth(terminalWidth),
+    width: extensionDialogWidth(terminalWidth),
     height: request.showAttribution ? 10 : 8,
     terminalWidth,
     terminalHeight,

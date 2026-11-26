@@ -51,7 +51,8 @@ import type { ReloadedSessionResult, ReloadSessionOptions } from "../session/typ
 import { HelpDialog } from "./components/chrome/HelpDialog";
 import { MenuDropdown } from "./components/chrome/MenuDropdown";
 import { MenuBar } from "./components/chrome/MenuBar";
-import { ConfirmDialog, confirmDialogHeight } from "./components/chrome/ConfirmDialog";
+import { ConfirmDialog } from "./components/chrome/ConfirmDialog";
+import { confirmDialogHeight } from "./lib/modalGeometry";
 import { ExtensionDialog } from "./components/chrome/ExtensionDialog";
 import { ViewPreferenceQuitDialog } from "./components/chrome/ViewPreferenceQuitDialog";
 import { ExtensionToast } from "./components/chrome/ExtensionToast";
@@ -646,14 +647,20 @@ export function App({
   const {
     accept: acceptExtensionDialog,
     cancel: cancelExtensionDialog,
+    confirmBody: extensionDialogConfirmBody,
     createDialogs: createQueuedExtensionDialogs,
     inputValue: extensionDialogInputValue,
     moveSelection: moveExtensionDialogSelection,
     pickOption: setExtensionDialogSelectedIndex,
     request: extensionDialog,
+    scrollBody: scrollExtensionDialogBody,
     selectedIndex: extensionDialogSelectedIndex,
     updateInput: setExtensionDialogInputValue,
-  } = useExtensionDialogController({ reviewGeneration: bootstrap });
+  } = useExtensionDialogController({
+    reviewGeneration: bootstrap,
+    terminalHeight: terminal.height,
+    terminalWidth: terminal.width,
+  });
 
   /** Report whether an extension id names Hunk's own bundled tier, which needs no attribution. */
   const isBundledExtension = useCallback(
@@ -1569,6 +1576,7 @@ export function App({
     acceptExtensionDialog,
     cancelExtensionDialog,
     moveExtensionDialogSelection,
+    scrollExtensionDialogBody,
     extensionTrustPromptOpen,
     trustRepoExtensions,
     isFileViewModeActive,
@@ -1942,6 +1950,7 @@ export function App({
 
       {extensionDialog ? (
         <ExtensionDialog
+          confirmBody={extensionDialogConfirmBody}
           inputValue={extensionDialogInputValue}
           request={extensionDialog}
           selectedIndex={extensionDialogSelectedIndex}
@@ -1952,6 +1961,7 @@ export function App({
           onCancel={cancelExtensionDialog}
           onChangeInput={setExtensionDialogInputValue}
           onPickOption={setExtensionDialogSelectedIndex}
+          onScrollBody={scrollExtensionDialogBody}
         />
       ) : null}
 
