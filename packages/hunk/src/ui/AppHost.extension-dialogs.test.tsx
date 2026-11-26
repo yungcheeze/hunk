@@ -383,6 +383,33 @@ describe("extension dialogs", () => {
     );
   });
 
+  test("cuts a long title with an ellipsis before the close affordance", async () => {
+    const repo = createTestRepo("hunk-ext-dialog-long-title-");
+    const extDir = createTempDir("hunk-ext-dialog-long-title-ext-");
+    const logPath = join(extDir, "probe.log");
+    const extPath = join(extDir, "ext.ts");
+    writeDialogFixture(
+      extPath,
+      logPath,
+      `ctx.dialogs.confirm({ title: "fix(runner-gateway): answer a refusal reached by racing with a second request" })`,
+    );
+
+    const bootstrap = await launchWithExtension(repo, extPath);
+    await withAppHost(bootstrap, async (setup) => {
+      await act(async () => {
+        await setup.mockInput.typeText("Y");
+      });
+      await flushUntil(
+        setup,
+        () => setup.captureCharFrame().includes("fix(runner-gateway)"),
+        "the long-titled dialog to open",
+      );
+
+      // The char frame renders the ellipsis as ".", so either spelling ends the title.
+      expect(setup.captureCharFrame()).toMatch(/[….]\[Esc\]/);
+    });
+  });
+
   test("escape resolves a confirm dialog as false", async () => {
     const repo = createTestRepo("hunk-ext-dialog-escape-");
     const extDir = createTempDir("hunk-ext-dialog-escape-ext-");

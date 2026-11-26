@@ -38,7 +38,8 @@ export function ModalFrame({
     terminalHeight,
   });
   const closeText = onClose ? "[Esc]" : "";
-  const titleWidth = Math.max(1, clampedWidth - 2 - (closeText ? closeText.length + 1 : 0));
+  // The border and the title row's padding each take a cell on both sides.
+  const titleWidth = Math.max(1, clampedWidth - 4 - (closeText ? closeText.length + 1 : 0));
 
   return (
     <>
