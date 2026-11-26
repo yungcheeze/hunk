@@ -47,10 +47,28 @@ describe("planConfirmDialogBody", () => {
       showAttribution: true,
       terminalHeight: 20,
       terminalWidth: 80,
+      title: "Commit",
     });
 
     expect(layout.body.truncated).toBe(true);
     expect(layout.body.start).toBe(layout.body.maxStart);
     expect(layout.body.lines.at(-2)).toBe("line 40");
+  });
+
+  test("widens to fit 72-column prose, up to the terminal's margin", () => {
+    const line = "x".repeat(72);
+    const plan = (terminalWidth: number) =>
+      planConfirmDialogBody({
+        bodyLines: [line],
+        scroll: 0,
+        showAttribution: false,
+        terminalHeight: 30,
+        terminalWidth,
+        title: "Commit",
+      });
+
+    expect(plan(160).bodyWidth).toBe(72);
+    expect(plan(160).body.lines).toEqual([line]);
+    expect(plan(70).frameWidth).toBe(62);
   });
 });

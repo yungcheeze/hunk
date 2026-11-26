@@ -48,6 +48,22 @@ export function extensionDialogWidth(terminalWidth: number) {
   return Math.min(72, Math.max(40, terminalWidth - 8));
 }
 
+/**
+ * Width a confirm dialog is drawn at: the shared width, widened to fit its
+ * longest body line and its title, up to the terminal's margin.
+ *
+ * Prose wrapped by its author, such as a commit message at 72 columns, keeps
+ * its own line breaks instead of being re-wrapped a few cells short.
+ */
+function confirmDialogWidth(title: string, bodyLines: readonly string[], terminalWidth: number) {
+  // Border and padding take two cells a side; the title row also holds " [Esc]".
+  const content = Math.max(title.length + 6, ...bodyLines.map((line) => line.length)) + 4;
+  return Math.min(
+    Math.max(extensionDialogWidth(terminalWidth), content),
+    Math.max(40, terminalWidth - 8),
+  );
+}
+
 /** Row plan for a confirm dialog's attribution and scrollable body. */
 export interface ConfirmDialogBodyLayout {
   frameWidth: number;
@@ -69,15 +85,17 @@ export function planConfirmDialogBody({
   showAttribution,
   terminalHeight,
   terminalWidth,
+  title,
 }: {
   bodyLines: readonly string[];
   scroll: number;
   showAttribution: boolean;
   terminalHeight: number;
   terminalWidth: number;
+  title: string;
 }): ConfirmDialogBodyLayout {
   const frame = resolveModalGeometry({
-    width: extensionDialogWidth(terminalWidth),
+    width: confirmDialogWidth(title, bodyLines, terminalWidth),
     height: Number.MAX_SAFE_INTEGER,
     terminalWidth,
     terminalHeight,

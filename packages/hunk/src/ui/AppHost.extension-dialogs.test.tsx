@@ -391,7 +391,8 @@ describe("extension dialogs", () => {
     writeDialogFixture(
       extPath,
       logPath,
-      `ctx.dialogs.confirm({ title: "fix(runner-gateway): answer a refusal reached by racing with a second request" })`,
+      // Wider than the terminal, so even a dialog sized to its title has to cut it.
+      `ctx.dialogs.confirm({ title: "fix(runner-gateway): answer a refusal reached by racing " + "with another request ".repeat(8) })`,
     );
 
     const bootstrap = await launchWithExtension(repo, extPath);
@@ -407,6 +408,33 @@ describe("extension dialogs", () => {
 
       // The char frame renders the ellipsis as ".", so either spelling ends the title.
       expect(setup.captureCharFrame()).toMatch(/[….]\[Esc\]/);
+    });
+  });
+
+  test("shows one action when the confirm and cancel labels match", async () => {
+    const repo = createTestRepo("hunk-ext-dialog-one-action-");
+    const extDir = createTempDir("hunk-ext-dialog-one-action-ext-");
+    const logPath = join(extDir, "probe.log");
+    const extPath = join(extDir, "ext.ts");
+    writeDialogFixture(
+      extPath,
+      logPath,
+      `ctx.dialogs.confirm({ title: "Commit message", body: "Why it changed.", confirmLabel: "close", cancelLabel: "close" })`,
+    );
+
+    const bootstrap = await launchWithExtension(repo, extPath);
+    await withAppHost(bootstrap, async (setup) => {
+      await act(async () => {
+        await setup.mockInput.typeText("Y");
+      });
+      await flushUntil(
+        setup,
+        () => setup.captureCharFrame().includes("Commit message"),
+        "the one-action dialog to open",
+      );
+
+      expect(setup.captureCharFrame()).toContain("enter/esc close");
+      expect(setup.captureCharFrame()).not.toContain("esc/n");
     });
   });
 

@@ -77,6 +77,7 @@ export function useExtensionDialogController({
           showAttribution: request.showAttribution,
           terminalHeight,
           terminalWidth,
+          title: request.title,
         })
       : null;
   const confirmBody = planBody(bodyScroll);

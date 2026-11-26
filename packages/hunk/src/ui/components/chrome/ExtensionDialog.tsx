@@ -104,10 +104,15 @@ export function ExtensionDialog({
 
   return (
     <ConfirmDialog
-      actions={[
-        { keyLabel: "enter/y", label: request.confirmLabel, run: onAccept },
-        { keyLabel: "esc/n", label: request.cancelLabel, run: onCancel },
-      ]}
+      actions={
+        // Two actions with one label are one choice to the reader, such as "close".
+        request.confirmLabel === request.cancelLabel
+          ? [{ keyLabel: "enter/esc", label: request.confirmLabel, run: onAccept }]
+          : [
+              { keyLabel: "enter/y", label: request.confirmLabel, run: onAccept },
+              { keyLabel: "esc/n", label: request.cancelLabel, run: onCancel },
+            ]
+      }
       height={confirmDialogHeight(body.lines.length + attributionRows + attributionGapRows)}
       terminalHeight={terminalHeight}
       terminalWidth={terminalWidth}
